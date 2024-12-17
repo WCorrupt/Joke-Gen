@@ -66,8 +66,8 @@
         .save-button {
             display: inline-block;
             position: absolute;
-            right: 20px;
-            top: 20px;
+            right: 400px;
+            top: 150px; /* Moved from 20px to 10px */
             background-color: #4caf50;
         }
 
@@ -145,7 +145,7 @@
         const mainPage = document.getElementById('mainPage');
         const savedJokesPage = document.getElementById('savedJokesPage');
 
-        let savedJokes = [];
+        let savedJokes = JSON.parse(localStorage.getItem('savedJokes')) || [];
 
         const jokeApis = [
             'https://icanhazdadjoke.com/',
@@ -182,9 +182,7 @@
             const joke = jokeText.innerText;
             if (!savedJokes.includes(joke)) {
                 savedJokes.push(joke);
-                alert("Joke saved!");
-            } else {
-                alert("This joke is already saved.");
+                localStorage.setItem('savedJokes', JSON.stringify(savedJokes));
             }
         }
 

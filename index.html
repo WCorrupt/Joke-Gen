@@ -34,16 +34,6 @@
             width: 100%;
         }
 
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        p {
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-        }
-
         button {
             background: #ff477e;
             border: none;
@@ -64,92 +54,40 @@
         }
 
         .save-button {
-            display: inline-block;
-            position: absolute;
-            right: 400px;
-            top: 150px; /* Moved from 20px to 10px */
             background-color: #4caf50;
-        }
-
-        .back-button {
-            display: block;
-            margin-top: 20px;
-            background-color: #ff477e;
-        }
-
-        .shape {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.3;
-            z-index: -1;
-        }
-
-        .shape1 {
-            width: 150px;
-            height: 150px;
-            background: #ff477e;
-            top: -50px;
-            right: -50px;
-        }
-
-        .shape2 {
-            width: 100px;
-            height: 100px;
-            background: #ff758c;
-            bottom: -30px;
-            left: -30px;
-        }
-
-        .shape3 {
-            width: 200px;
-            height: 200px;
-            background: #ff477e;
-            bottom: -100px;
-            right: 50px;
         }
     </style>
 </head>
 <body>
 
-    <div class="container" id="mainPage">
+    <div class="container">
         <h1>Random Joke Generator</h1>
         <p id="joke">Click the button to get a joke!</p>
-        
+
         <button id="jokeButton">Get a New Joke</button>
         <button id="chuckButton">Chuck Norris Jokes</button>
         <button id="saveJokeButton" class="save-button">Save Joke</button>
-        <button id="viewSavedJokesButton">View Saved Jokes</button>
-
-        <div class="shape shape1"></div>
-        <div class="shape shape2"></div>
-        <div class="shape shape3"></div>
+        <button onclick="location.href='saved.html'">View Saved Jokes</button>
     </div>
 
-    <div class="container" id="savedJokesPage" style="display: none;">
-        <h1>Saved Jokes</h1>
-        <p id="savedJoke">Click the button to see a saved joke!</p>
-        
-        <button id="generateSavedJokeButton">Get a Saved Joke</button>
-        <button id="backToMainButton" class="back-button">Back to Main</button>
-    </div>
+    <!-- Order is very important -->
+    <script src="js/firebase-config.js"></script> <!-- Firebase config comes first -->
+    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-database-compat.js"></script>
 
     <script>
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
         const jokeButton = document.getElementById('jokeButton');
         const chuckButton = document.getElementById('chuckButton');
         const saveJokeButton = document.getElementById('saveJokeButton');
-        const viewSavedJokesButton = document.getElementById('viewSavedJokesButton');
-        const generateSavedJokeButton = document.getElementById('generateSavedJokeButton');
-        const backToMainButton = document.getElementById('backToMainButton');
         const jokeText = document.getElementById('joke');
-        const savedJokeText = document.getElementById('savedJoke');
-        const mainPage = document.getElementById('mainPage');
-        const savedJokesPage = document.getElementById('savedJokesPage');
-
-        let savedJokes = JSON.parse(localStorage.getItem('savedJokes')) || [];
 
         const jokeApis = [
             'https://icanhazdadjoke.com/',
-            'https://v2.jokeapi.dev/joke/Any',
+            'https://v2.jokeapi.dev/joke/Any'
         ];
 
         function getRandomJokeAPI() {
@@ -162,9 +100,10 @@
             try {
                 const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
                 const data = await response.json();
-                jokeText.innerHTML = data.joke || `${data.setup} - ${data.delivery}`;
+                jokeText.innerText = data.joke || `${data.setup} - ${data.delivery}`;
             } catch (error) {
-                jokeText.innerHTML = "Oops, something went wrong!";
+                console.error("Error fetching joke:", error);
+                jokeText.innerText = "Oops, something went wrong!";
             }
         }
 
@@ -172,45 +111,26 @@
             try {
                 const response = await fetch('https://api.chucknorris.io/jokes/random');
                 const data = await response.json();
-                jokeText.innerHTML = data.value;
+                jokeText.innerText = data.value;
             } catch (error) {
-                jokeText.innerHTML = "Oops, something went wrong!";
+                console.error("Error fetching Chuck Norris joke:", error);
+                jokeText.innerText = "Oops, something went wrong!";
             }
         }
 
         function saveJoke() {
             const joke = jokeText.innerText;
-            if (!savedJokes.includes(joke)) {
-                savedJokes.push(joke);
-                localStorage.setItem('savedJokes', JSON.stringify(savedJokes));
-            }
-        }
-
-        function showSavedJokesPage() {
-            mainPage.style.display = 'none';
-            savedJokesPage.style.display = 'block';
-        }
-
-        function showMainPage() {
-            savedJokesPage.style.display = 'none';
-            mainPage.style.display = 'block';
-        }
-
-        function generateSavedJoke() {
-            if (savedJokes.length > 0) {
-                const randomIndex = Math.floor(Math.random() * savedJokes.length);
-                savedJokeText.innerText = savedJokes[randomIndex];
-            } else {
-                savedJokeText.innerText = "No saved jokes available.";
+            if (joke && joke !== "Oops, something went wrong!") {
+                const newJokeKey = database.ref('jokes').push().key;
+                database.ref('jokes/' + newJokeKey).set(joke)
+                    .then(() => console.log("Joke saved successfully"))
+                    .catch(err => console.error("Error saving joke:", err));
             }
         }
 
         jokeButton.addEventListener('click', fetchRandomJoke);
         chuckButton.addEventListener('click', fetchChuckJoke);
         saveJokeButton.addEventListener('click', saveJoke);
-        viewSavedJokesButton.addEventListener('click', showSavedJokesPage);
-        backToMainButton.addEventListener('click', showMainPage);
-        generateSavedJokeButton.addEventListener('click', generateSavedJoke);
     </script>
 
 </body>

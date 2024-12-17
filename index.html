@@ -56,6 +56,25 @@
         .save-button {
             background-color: #4caf50;
         }
+
+        /* Style for the saved bubble */
+        .saved-bubble {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .saved-bubble.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -116,12 +135,36 @@
             }
         }
 
+        function showSavedBubble() {
+            // Check if the bubble already exists
+            let savedBubble = document.querySelector('.saved-bubble');
+            
+            // If it doesn't exist, create it
+            if (!savedBubble) {
+                savedBubble = document.createElement('div');
+                savedBubble.classList.add('saved-bubble');
+                savedBubble.innerText = 'Saved!';
+                document.body.appendChild(savedBubble);
+            }
+
+            // Show the bubble
+            savedBubble.classList.add('show');
+
+            // Remove it after 1 second
+            setTimeout(() => {
+                savedBubble.classList.remove('show');
+            }, 1000);
+        }
+
         function saveJoke() {
             const joke = jokeText.innerText;
             if (joke && joke !== "Oops, something went wrong!") {
                 const newJokeKey = database.ref('jokes').push().key;
                 database.ref('jokes/' + newJokeKey).set(joke)
-                    .then(() => console.log("Joke saved successfully"))
+                    .then(() => {
+                        console.log("Joke saved successfully");
+                        showSavedBubble();
+                    })
                     .catch(err => console.error("Error saving joke:", err));
             }
         }

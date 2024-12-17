@@ -27,6 +27,61 @@
             border-radius: 10px;
             margin-bottom: 15px;
             box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .joke.fade-out {
+            opacity: 0;
+            transform: translateX(-100%);
+        }
+
+        .delete-button {
+            width: 30px;
+            height: 30px;
+            background-color: #ff4c4c;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 10px;
+            position: absolute;
+            left: -40px; /* Puts it to the left of the joke */
+            top: 50%;
+            transform: translateY(-50%);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .delete-button:hover {
+            background-color: #e63e6f;
+            transform: scale(1.2);
+        }
+
+        .delete-button::before {
+            content: '';
+            width: 15px;
+            height: 2px;
+            background-color: #fff;
+            display: block;
+            transform: rotate(45deg);
+            position: absolute;
+        }
+
+        .delete-button::after {
+            content: '';
+            width: 15px;
+            height: 2px;
+            background-color: #fff;
+            display: block;
+            transform: rotate(-45deg);
+            position: absolute;
         }
 
         button {
@@ -37,6 +92,10 @@
             color: white;
             cursor: pointer;
             margin: 10px 0;
+        }
+
+        button:hover {
+            background-color: #e63e6f;
         }
     </style>
 </head>
@@ -70,14 +129,51 @@
 
         const jokeList = document.getElementById('jokeList');
 
-        database.ref('jokes').once('value').then(snapshot => {
-            Object.values(snapshot.val()).forEach(joke => {
-                const jokeElement = document.createElement('div');
-                jokeElement.classList.add('joke');
-                jokeElement.innerText = joke;
-                jokeList.appendChild(jokeElement);
+        function fetchSavedJokes() {
+            database.ref('jokes').once('value').then(snapshot => {
+                const jokes = snapshot.val();
+                if (jokes) {
+                    Object.entries(jokes).forEach(([key, joke]) => {
+                        createJokeElement(key, joke);
+                    });
+                } else {
+                    jokeList.innerHTML = "<p>No saved jokes found.</p>";
+                }
             });
-        });
+        }
+
+        function createJokeElement(key, joke) {
+            const jokeElement = document.createElement('div');
+            jokeElement.classList.add('joke');
+
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-button');
+            deleteButton.addEventListener('click', () => deleteJoke(key, jokeElement));
+
+            const jokeText = document.createElement('span');
+            jokeText.innerText = joke;
+
+            jokeElement.appendChild(deleteButton);
+            jokeElement.appendChild(jokeText);
+            jokeList.appendChild(jokeElement);
+        }
+
+        function deleteJoke(key, jokeElement) {
+            const password = prompt('Enter password to delete this joke:');
+            if (password === '999') {
+                jokeElement.classList.add('fade-out');
+                setTimeout(() => {
+                    jokeElement.remove();
+                    database.ref('jokes/' + key).remove()
+                        .then(() => console.log('Joke deleted successfully'))
+                        .catch(err => console.error('Error deleting joke:', err));
+                }, 300); // Wait for the fade-out animation to finish
+            } else {
+                alert('Incorrect password.');
+            }
+        }
+
+        window.onload = fetchSavedJokes;
     </script>
 
 </body>

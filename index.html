@@ -70,13 +70,22 @@
         <button onclick="location.href='saved.html'">View Saved Jokes</button>
     </div>
 
-    <!-- Order is very important -->
-    <script src="js/firebase-config.js"></script> <!-- Firebase config comes first -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-database-compat.js"></script>
 
     <script>
-        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBvcp5k74i_O6QDcuUmP-eNLv-Qs9uFPEE",
+            authDomain: "jokes-da674.firebaseapp.com",
+            databaseURL: "https://jokes-da674-default-rtdb.firebaseio.com",
+            projectId: "jokes-da674",
+            storageBucket: "jokes-da674.firebasestorage.app",
+            messagingSenderId: "362441781628",
+            appId: "1:362441781628:web:a72d628e8e646707bff4f9",
+            measurementId: "G-3L0ZEHQBWX"
+        };
+
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
@@ -107,17 +116,6 @@
             }
         }
 
-        async function fetchChuckJoke() {
-            try {
-                const response = await fetch('https://api.chucknorris.io/jokes/random');
-                const data = await response.json();
-                jokeText.innerText = data.value;
-            } catch (error) {
-                console.error("Error fetching Chuck Norris joke:", error);
-                jokeText.innerText = "Oops, something went wrong!";
-            }
-        }
-
         function saveJoke() {
             const joke = jokeText.innerText;
             if (joke && joke !== "Oops, something went wrong!") {
@@ -129,7 +127,7 @@
         }
 
         jokeButton.addEventListener('click', fetchRandomJoke);
-        chuckButton.addEventListener('click', fetchChuckJoke);
+        chuckButton.addEventListener('click', fetchRandomJoke);
         saveJokeButton.addEventListener('click', saveJoke);
     </script>
 
